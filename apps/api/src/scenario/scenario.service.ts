@@ -3,6 +3,7 @@ import {
   Injectable,
   InternalServerErrorException,
   Logger,
+  ServiceUnavailableException,
 } from '@nestjs/common';
 import { Counter } from 'prom-client';
 import { randomUUID } from 'crypto';
@@ -39,13 +40,22 @@ export class ScenarioService {
       throw new BadRequestException(`Unknown scenario type: ${type}`);
     }
 
-    await this.scenarioRepository.create({
-      traceId,
-      scenarioName: type,
-      status: ScenarioRunStatus.RUNNING,
-      input: {},
-      startedAt,
-    });
+        try {
+      await this.scenarioRepository.create({
+        traceId,
+        scenarioName: type,
+        status: ScenarioRunStatus.RUNNING,
+        input: {},
+        startedAt,
+      });
+    } catch (error) {
+      this.logger.error(
+        'Scenario storage unavailable on create',
+        error instanceof Error ? error.stack : String(error),
+      );
+
+
+    }
 
     try {
       this.logStarted(type);
@@ -65,19 +75,26 @@ export class ScenarioService {
       this.logCompleted(type);
       this.scenarioCounter.inc({ type, status: 'completed' });
 
-      const finishedAt = new Date();
+           const finishedAt = new Date();
       const durationMs = finishedAt.getTime() - startedAt.getTime();
 
-      await this.scenarioRepository.update({
-        traceId,
-        status: ScenarioRunStatus.SUCCEEDED,
-        output: {
-          status: 'completed',
-          scenario: type,
-        },
-        finishedAt,
-        durationMs,
-      });
+      try {
+        await this.scenarioRepository.update({
+          traceId,
+          status: ScenarioRunStatus.SUCCEEDED,
+          output: {
+            status: 'completed',
+            scenario: type,
+          },
+          finishedAt,
+          durationMs,
+        });
+      } catch (error) {
+        this.logger.error(
+          'Scenario storage unavailable on success update',
+          error instanceof Error ? error.stack : String(error),
+        );
+      }
 
       return {
         status: 'completed',
@@ -92,15 +109,37 @@ export class ScenarioService {
       const finishedAt = new Date();
       const durationMs = finishedAt.getTime() - startedAt.getTime();
 
-      await this.scenarioRepository.update({
-        traceId,
-        status: ScenarioRunStatus.FAILED,
-        errorMessage: error instanceof Error ? error.message : 'Unknown error',
-        finishedAt,
-        durationMs,
-      });
+      try {
+        await this.scenarioRepository.update({
+          traceId,
+          status: ScenarioRunStatus.FAILED,
+          errorMessage: error instanceof Error ? error.message : 'Unknown error',
+          finishedAt,
+          durationMs,
+        });
+      } catch (updateError) {
+        this.logger.error(
+          'Scenario storage unavailable on failed update',
+          updateError instanceof Error ? updateError.stack : String(updateError),
+        );
+      }
 
       throw error;
+    }
+  }
+
+    async getScenarioHistory() {
+    try {
+      return await this.scenarioRepository.findAll();
+    } catch (error) {
+      this.logger.error(
+        'Scenario history storage unavailable',
+        error instanceof Error ? error.stack : String(error),
+      );
+
+      throw new ServiceUnavailableException(
+        'Scenario storage is unavailable',
+      );
     }
   }
 

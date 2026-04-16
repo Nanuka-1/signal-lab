@@ -1,0 +1,105 @@
+# Observability Skill
+
+## Purpose
+Use this skill when working on metrics, logs, Grafana, Prometheus, Loki, Promtail, or scenario observability behavior.
+
+## Scope
+This skill applies to:
+- `/metrics`
+- `prom-client`
+- `scenario_runs_total`
+- scenario logging
+- Prometheus config
+- Loki config
+- Promtail config
+- Grafana datasources
+- Grafana dashboards
+- Docker Compose observability services
+
+## Required project anchors
+The following observability anchors already exist and must be preserved:
+- `/metrics`
+- `scenario_runs_total`
+- `scenarioCounter.inc(...)`
+- `logStarted(...)`
+- `logCompleted(...)`
+- `logFailed(...)`
+- Prometheus datasource
+- Loki datasource
+
+## Metric rules
+- The custom metric `scenario_runs_total` is required and must not be removed or renamed.
+- `scenario_runs_total` currently uses labels:
+  - `type`
+  - `status`
+- Supported status values currently include:
+  - `started`
+  - `completed`
+  - `error`
+- Do not silently rename metric labels.
+- Do not silently change metric status values.
+- New scenario-related metrics must be explicit and additive.
+
+## Logging rules
+- Scenario logging must be preserved.
+- Do not remove `logStarted`, `logCompleted`, or `logFailed` unless equivalent structured logging replaces them.
+- Scenario logs should remain structured and machine-readable.
+- Preferred structured log shape includes:
+  - `event`
+  - `scenario`
+  - `status` when relevant
+  - `message` when relevant
+  - `durationMs` when relevant
+  - `error` when relevant
+- Do not downgrade structured logs into vague plain text if structured logging already exists.
+
+## Database failure behavior
+- Scenario metrics must still be emitted even if Prisma persistence fails.
+- Prisma create/update calls in scenario execution are non-critical unless explicitly stated otherwise.
+- Wrap non-critical Prisma writes in try/catch.
+- Database write failures during scenario execution must be logged.
+- Database write failures during scenario execution must not block metric emission.
+- Storage-dependent reads such as GET `/scenarios` may return `ServiceUnavailableException`.
+
+## Backend scenario behavior
+When adding or modifying a scenario:
+1. Preserve scenario logging.
+2. Preserve metric emission.
+3. Keep metrics independent from Prisma success.
+4. Keep failure visibility explicit.
+5. Ensure success and error paths remain observable.
+
+## Infra behavior
+When editing observability infra:
+1. Keep Docker Compose service names stable unless explicitly requested.
+2. Keep internal service URLs aligned with Docker Compose service names.
+3. Do not change ports casually.
+4. Prefer provisioning over manual UI setup.
+5. Keep configs minimal, explicit, and reviewable.
+6. Do not remove Prometheus, Loki, Promtail, or Grafana datasources/configs without an explicit replacement.
+
+## Deletion guardrails
+- Never remove `/metrics`.
+- Never remove `scenario_runs_total`.
+- Never remove Grafana datasource provisioning unless it is replaced with an equivalent provisioning approach.
+- Never remove Loki/Promtail wiring unless it is replaced with an equivalent log delivery path.
+- Never remove working observability behavior during refactoring.
+
+## Required checks
+Before finishing an observability task, verify mentally or explicitly:
+- Is `/metrics` still available?
+- Is `scenario_runs_total` still emitted?
+- Are metric labels still compatible with existing code and dashboards?
+- Can Prometheus still scrape the API?
+- Can Grafana still find Prometheus and Loki datasources?
+- Can logs still reach Loki through Promtail?
+- Did the change preserve failure visibility?
+- Did the change avoid unnecessary refactoring?
+
+## Output style
+When implementing observability work:
+- prefer small safe edits
+- explain what changed and why
+- avoid broad refactors
+- preserve working behavior
+- prefer additive changes over destructive changes

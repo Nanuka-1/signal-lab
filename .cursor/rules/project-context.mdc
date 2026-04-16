@@ -1,0 +1,58 @@
+# Signal Lab — Project Context
+
+## Project goal
+Signal Lab is an observability playground.
+
+The system simulates backend scenarios and makes them visible through:
+- Prometheus metrics
+- Loki logs
+- Grafana dashboards
+- optional database persistence through Prisma
+
+## Main user flow
+The user triggers a scenario.
+The backend runs the scenario and produces:
+- logs
+- metrics
+- optional storage writes
+
+The system must remain observable even when the database is unavailable.
+
+## Current stack
+- Backend: NestJS + TypeScript
+- Metrics: prom-client
+- Persistence: Prisma + PostgreSQL
+- Observability: Prometheus, Loki, Promtail, Grafana
+- Infra: Docker Compose
+- AI layer: Cursor rules, skills, commands, hooks
+
+## Current backend behavior
+Implemented scenario types:
+- test_scenario
+- slow_success
+- system_error
+
+Implemented endpoints:
+- GET /health
+- GET /metrics
+- GET /scenarios
+- POST /scenarios
+
+## Important engineering intent
+This project prioritizes observability over storage reliability.
+
+That means:
+- metrics must still be emitted even if Prisma fails
+- logs must still be written even if Prisma fails
+- scenario execution should continue when storage fails, unless the request is explicitly storage-dependent
+- storage-dependent reads may return ServiceUnavailable
+
+## Existing observability behavior
+- custom metric: scenario_runs_total
+- scenario execution emits statuses such as started, completed, error
+- scenario logs must remain structured and meaningful
+- Grafana reads Prometheus and Loki through provisioned datasources
+
+## AI layer intent
+Cursor should act as a scoped implementation assistant.
+Cursor must preserve working observability behavior and avoid destructive refactors.

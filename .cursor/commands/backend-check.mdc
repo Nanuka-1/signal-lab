@@ -1,0 +1,78 @@
+# Command: Backend Check
+
+## Purpose
+Run a quick sanity check before or after modifying backend or observability code.
+
+## When to use
+Use this command when:
+- modifying scenario logic
+- changing metrics
+- editing logs
+- touching Prisma interactions
+- updating observability configs
+
+## Steps
+
+1. Check metrics endpoint
+- Ensure `/metrics` is still exposed
+- Ensure `scenario_runs_total` still exists
+
+2. Check metric correctness
+- Confirm metric labels are unchanged:
+  - `type`
+  - `status`
+- Confirm status values still include:
+  - started
+  - completed
+  - error
+
+3. Check metric timing
+- Confirm `started` is emitted before scenario business logic executes
+- Confirm `completed` is emitted only after successful scenario logic
+- Confirm `error` is emitted only after scenario logic failure
+- Confirm metric emission is not blocked by Prisma write failures
+
+4. Check logging
+- `logStarted` is present
+- `logCompleted` or `logFailed` is present
+- Logs remain structured and machine-readable
+- Confirm scenario logs are emitted as structured JSON, not vague plain strings
+- Confirm storage-related errors are logged explicitly when relevant
+
+5. Check database behavior
+- Prisma writes are wrapped where needed
+- Non-critical Prisma failures do not block scenario observability
+- Scenario execution still works when DB is unavailable where current design allows it
+
+6. Check API behavior
+- POST `/scenarios`:
+  - still emits metrics and logs even if DB persistence fails
+  - may still return success when scenario logic succeeds
+- GET `/scenarios`:
+  - returns 503 if DB is unavailable
+  - logs storage error before returning 503
+  - does not silently swallow storage errors
+
+7. Check enum stability
+- Confirm `ScenarioType` enum values are unchanged unless explicitly requested:
+  - test_scenario
+  - slow_success
+  - system_error
+
+8. Check for accidental breakage
+- No removal of `/metrics`
+- No removal of `scenario_runs_total`
+- No silent renaming of metric labels
+- No silent renaming of scenario enum values
+- No removal of structured logging without equivalent replacement
+
+## Output
+- Summarize what is correct
+- List any violations
+- Suggest minimal fixes if needed
+
+## Style
+- Do not refactor code
+- Only validate and suggest
+- Keep output short and actionable
+- Prefer pointing to exact lines, methods, or symbols when possible

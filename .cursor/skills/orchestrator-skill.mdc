@@ -1,0 +1,146 @@
+# Orchestrator Skill
+
+## Purpose
+Use this skill to decompose large tasks into small, safe, reviewable implementation steps.
+
+This orchestrator should:
+- preserve context
+- avoid broad refactors
+- delegate work in atomic chunks
+- keep the repository stable while work progresses
+- help smaller models complete bounded tasks safely
+
+## When to use
+Use this skill when a request is:
+- cross-cutting
+- multi-file
+- ambiguous
+- risky
+- larger than one safe implementation step
+- likely to affect backend, infra, observability, or AI-layer structure together
+
+Examples:
+- "Add a new scenario end-to-end"
+- "Wire a full observability flow"
+- "Prepare the repo for submission"
+- "Add a new service to docker-compose"
+- "Improve AI layer for Cursor"
+
+## Ambiguity handling
+- If the task is ambiguous, clarify scope before decomposing.
+- Do not decompose based on unstated assumptions when the ambiguity changes architecture, behavior, or file scope.
+- If ambiguity is minor and does not change core behavior, state the assumption explicitly and continue with the safest bounded step.
+
+## Core orchestration rules
+- Never attempt large tasks in one pass.
+- First decompose the request into bounded subtasks.
+- Prefer one-file or one-concern changes.
+- Preserve working behavior after each step.
+- Avoid destructive refactors unless explicitly requested.
+- If a task touches observability, preserve metrics and logs first.
+- If a task touches backend scenario flow, preserve scenarioCounter and structured logs.
+- If a task touches infra, preserve service-name consistency across configs.
+- Prefer additive changes over rewrites.
+
+## Decomposition strategy
+For each incoming task:
+1. Identify the target layer:
+   - backend
+   - observability
+   - infra
+   - AI layer
+   - documentation
+2. Identify affected files.
+3. Identify invariants that must not change.
+4. Split the task into the smallest meaningful implementation units.
+5. Order units from safest/core-first to riskier/integration-later.
+6. If a subtask depends on a previous one, explicitly verify the prior result before starting the next subtask.
+7. Complete one unit at a time.
+8. Re-check invariants after each unit.
+
+## Atomic plan rules
+- Atomic plan should contain 3–7 subtasks maximum.
+- If more than 7 subtasks are needed, split the work into phases.
+- Each subtask must:
+  - have a narrow scope
+  - be understandable in isolation
+  - avoid mixing backend, infra, and AI-layer work unless strictly necessary
+  - have a clear success condition
+
+## Required output format
+When using this skill, produce:
+
+### Task framing
+- what the task is
+- which layer it belongs to
+- what must not break
+
+### Atomic plan
+A short numbered list of subtasks where each subtask:
+- is independently understandable
+- has a narrow scope
+- can be reviewed in isolation
+- avoids mixing infra, backend, and AI-layer work unnecessarily
+
+### Execution policy
+- do only the current subtask
+- do not jump ahead
+- do not silently modify adjacent systems
+- stop after each meaningful subtask for review or verification
+
+## Review protocol
+- After each subtask, explicitly summarize what changed.
+- State whether the subtask succeeded.
+- State which invariants were checked.
+- Ask explicitly whether to proceed to the next step when interactive review is expected.
+- Do not continue automatically when the workflow requires stepwise confirmation.
+
+## Safety invariants
+Always preserve these unless explicitly told otherwise:
+- `/metrics` remains available
+- `scenario_runs_total` remains active
+- scenario logging remains present
+- `ScenarioType` enum values remain stable:
+  - `test_scenario`
+  - `slow_success`
+  - `system_error`
+- docker-compose service names remain consistent
+- Grafana datasource URLs remain service-name based
+- GET `/scenarios` remains storage-dependent
+- POST `/scenarios` remains observable even if DB persistence fails
+
+## Delegation guidance for smaller models
+When delegating to a smaller model:
+- give it exactly one bounded task
+- include only the files relevant to that task
+- pass the relevant subset of Safety invariants explicitly, not by reference
+- restate what must not change
+- ask for minimal diffs, not broad rewrites
+- require explicit reporting of assumptions
+- require the model to report whether the task depends on any unfinished prior step
+
+## Completion checklist
+Before marking an orchestrated task as done, confirm:
+- the task was decomposed
+- ambiguity was resolved or explicitly bounded
+- only one subtask was executed at a time
+- dependent subtasks were not started prematurely
+- invariants were preserved
+- no silent refactor occurred
+- the result is ready for the next bounded step
+
+## Anti-patterns
+Do not:
+- rewrite multiple layers at once
+- mix feature work with cleanup unless explicitly requested
+- rename anchors casually
+- remove working observability behavior
+- change ports, service names, or metric names without explicit instruction
+- continue into later subtasks without verifying earlier dependent results
+
+## Output style
+- concise
+- structured
+- stepwise
+- low-risk
+- explicit about assumptions and boundaries

@@ -46,4 +46,13 @@ export class ScenarioPrismaRepository implements ScenarioRepository {
       },
     });
   }
+
+
+async findAll() {
+    return this.prisma.scenarioRun.findMany({
+      orderBy: {
+        startedAt: 'desc',
+      },
+    });
+  }
 }

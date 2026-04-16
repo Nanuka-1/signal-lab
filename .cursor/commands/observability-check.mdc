@@ -1,0 +1,89 @@
+# Command: Observability Check
+
+## Purpose
+Validate the full observability stack: metrics, logs, and visualization.
+
+## When to use
+Use this command when:
+- modifying metrics
+- updating logging
+- editing Prometheus config
+- editing Loki or Promtail config
+- updating Grafana datasources or dashboards
+- modifying docker-compose observability services
+
+## Steps
+
+1. Check metrics presence
+- Confirm `/metrics` is still exposed
+- Confirm `scenario_runs_total` is still present in code and/or endpoint output
+- Confirm the metric name was not silently renamed
+
+2. Check Prometheus exposition compatibility
+- Confirm the API still exposes metrics in Prometheus-compatible text format
+- Confirm metric naming remains compatible with Prometheus conventions
+- Confirm there are no breaking output format changes
+
+3. Check Prometheus configuration
+- Confirm `job_name` in `prometheus.yml` is unchanged unless explicitly requested
+- Confirm the scrape target still points to the API service
+- Confirm the scrape path is still `/metrics`
+- Confirm the scrape interval is still reasonable and not removed
+
+4. Check backend logging output
+- Confirm backend still produces scenario logs
+- Confirm logs remain structured and machine-readable
+- Confirm logs are structured JSON or equivalent structured output, not vague plain text
+- Confirm no required logging calls were removed
+
+5. Check Loki and Promtail pipeline compatibility
+- Confirm Promtail reads logs from the intended path
+- Confirm Promtail still sends logs to Loki
+- Confirm the Loki push URL still matches the docker-compose service name
+- Confirm the log format expected by Promtail still matches backend log output format
+
+6. Check Grafana datasources
+- Confirm Prometheus datasource exists
+- Confirm Loki datasource exists
+- Confirm datasource URLs still match docker-compose service names:
+  - `http://prometheus:9090`
+  - `http://loki:3100`
+- Confirm no datasource auth settings were accidentally added or removed
+
+7. Check Grafana dashboards
+- Confirm dashboard JSON files still exist
+- Confirm `scenario_runs_total` is still used correctly
+- Confirm queries remain valid Prometheus expressions
+- Confirm there is no silent query breakage
+- Confirm dashboard time range is relative, not fixed to a past time window
+
+8. Check Docker Compose observability services
+- Confirm these services still exist:
+  - api
+  - postgres
+  - prometheus
+  - loki
+  - promtail
+  - grafana
+- Confirm ports are not conflicting
+- Confirm service names are unchanged unless explicitly requested
+- Confirm internal service networking assumptions still match config files
+
+9. Check failure visibility
+- Verify by inspecting scenario execution flow in code, not only by assuming runtime behavior
+- Confirm metrics are still emitted even when DB persistence fails
+- Confirm logs are still produced when errors occur
+- Confirm `system_error` scenario still produces failure visibility through logs and metrics
+- Confirm DB failure does not silently remove observability signals
+
+## Output
+- Confirm what is working
+- Identify broken parts (metrics, logs, dashboards, infra)
+- Suggest minimal fixes
+
+## Style
+- Do not refactor code
+- Do not rewrite configs
+- Only validate and suggest
+- Keep output structured and concise
+- Prefer exact references to files, symbols, or config keys when possible

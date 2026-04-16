@@ -1,0 +1,26 @@
+# Hook: Guard Refactor Scope
+
+## Trigger
+Run when changes touch multiple layers at once:
+- backend (`src/**/*.ts`)
+- infra (`docker-compose.yml`, `infra/**`)
+- AI layer (`.cursor/**`)
+
+## Purpose
+Prevent broad, risky refactors that mix concerns.
+
+## Blocking conditions
+Stop and warn if a change:
+- modifies backend + infra + AI-layer in one pass
+- renames multiple anchors at once (metrics, endpoints, service names)
+- mixes feature work with cleanup without explicit intent
+
+## Required response
+1. Identify mixed scopes (backend / infra / AI)
+2. Explain risk (hard to review, higher chance of regressions)
+3. Propose splitting into atomic steps
+4. Ask for confirmation before proceeding
+
+## Style
+- be strict about scope
+- prefer splitting into phases

@@ -1,0 +1,67 @@
+# Hook: Protect Observability
+
+## Trigger
+Run this hook whenever changes touch:
+- `scenario.service.ts`
+- `scenario.controller.ts`
+- `metrics.controller.ts`
+- `app.controller.ts`
+- `docker-compose.yml`
+- `infra/prometheus/*`
+- `infra/grafana/*`
+- `infra/loki/*`
+- `infra/promtail/*`
+
+## Purpose
+Prevent accidental removal or silent breakage of core observability behavior.
+
+## Explicit intent definition
+"Explicit intent" means the user directly names the exact observability element to change.
+Examples of explicit intent:
+- "rename scenario_runs_total"
+- "remove /metrics"
+- "change Grafana datasource URL"
+- "rename prometheus service"
+
+Examples that are NOT explicit intent:
+- "refactor the service"
+- "clean up backend code"
+- "simplify observability"
+- "improve metrics"
+
+## Blocking conditions
+Stop and warn if a change does any of the following without explicit user intent:
+- removes `/metrics`
+- renames or removes `scenario_runs_total`
+- removes `scenarioCounter.inc(...)`
+- changes label keys inside `scenarioCounter.inc(...)` away from:
+  - `type`
+  - `status`
+- removes `logStarted(...)`
+- removes `logCompleted(...)`
+- removes `logFailed(...)`
+- removes `POST /scenarios`
+- removes `GET /scenarios`
+- breaks Prometheus scrape path `/metrics`
+- renames observability service names in docker-compose:
+  - `prometheus`
+  - `loki`
+  - `promtail`
+  - `grafana`
+- changes Grafana datasource provisioning URLs away from expected service-name based URLs:
+  - `http://prometheus:9090`
+  - `http://loki:3100`
+
+## Required response
+If a blocking condition is detected:
+1. Explain exactly what changed
+2. Explain why it is risky
+3. Ask for explicit confirmation before continuing
+4. Do not restore or rewrite anything until confirmation is received
+5. Prefer restoring the previous working observability behavior only after confirmation
+
+## Style
+- be strict
+- be specific
+- do not allow silent observability regressions
+- prefer exact file, symbol, and config-key references

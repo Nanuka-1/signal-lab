@@ -1,0 +1,27 @@
+# Backend Observability Rules
+
+- prom-client is the source of custom backend metrics.
+- The metric `scenario_runs_total` must remain active and must not be renamed.
+- `scenarioCounter.inc()` must be preserved and must execute for every scenario outcome that reaches business execution.
+- Supported metric statuses currently include:
+  - started
+  - completed
+  - error
+
+- Metrics must not depend on Prisma success.
+- Prisma create/update calls in scenario execution must be wrapped in try/catch.
+- Database write failures during scenario execution must be logged and must not stop metrics emission.
+- Scenario execution should continue when Prisma persistence fails during create/update in POST /scenarios.
+- Storage-dependent reads such as GET /scenarios may return `ServiceUnavailableException` when storage is unavailable.
+
+- Never remove `/metrics`.
+- Never break Prometheus compatibility of `/metrics`.
+- Never rename `ScenarioType` enum values without updating metrics, logs, and API behavior consistently.
+- Never remove or bypass `logStarted`, `logCompleted`, or `logFailed` unless equivalent structured logging is added.
+
+- Preserve current API semantics:
+  - POST /scenarios may still complete even when DB persistence fails
+  - GET /scenarios may fail with 503 when storage is unavailable
+
+- Prefer additive changes over destructive refactors.
+- Do not rewrite working observability code unless explicitly requested.

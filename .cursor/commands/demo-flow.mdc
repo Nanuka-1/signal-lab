@@ -1,0 +1,30 @@
+# Command: Demo Flow
+
+## Purpose
+Describe how to manually verify the system end-to-end.
+
+## Steps
+
+1. Run backend
+- start API
+- open `/health`
+- open `/metrics`
+
+2. Trigger scenario
+- POST `/scenarios` with `test_scenario`
+
+3. Verify metrics
+- check `scenario_runs_total` increased
+
+4. Verify failure case
+- POST `system_error`
+- confirm `error` metric is emitted
+
+5. Expected behavior
+- metrics always update
+- logs always appear
+- DB failure does not block observability
+
+## Output
+- confirm each step works
+- highlight failures

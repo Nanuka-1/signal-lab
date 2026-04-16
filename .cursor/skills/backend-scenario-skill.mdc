@@ -1,0 +1,131 @@
+# Backend Scenario Skill
+
+## Purpose
+Use this skill when creating or modifying backend scenarios in the NestJS API.
+
+## Scope
+This skill applies to:
+- scenario.service.ts
+- scenario.controller.ts
+- scenario.prisma.repository.ts
+- ScenarioType enum
+- scenario execution flow
+- scenario metrics and logs
+- scenario repository interactions
+
+## Existing architecture
+Scenario execution flow:
+1. Validate scenario type
+2. Attempt DB create for RUNNING state
+3. Emit `started` metric and start log
+4. Execute scenario logic
+5. Emit completion or failure log
+6. Emit final metric (`completed` or `error`)
+7. Attempt DB update for final state
+8. Return API response or propagate scenario logic error
+
+## Scenario types
+Current enum:
+- test_scenario
+- slow_success
+- system_error
+
+Current behavior:
+- test_scenario: resolves successfully without artificial delay
+- slow_success: delays execution to simulate latency, then resolves successfully
+- system_error: throws an internal scenario error intentionally
+
+Do not rename existing scenario types without updating:
+- metrics
+- logs
+- API behavior
+- dashboards
+- any scenario-specific client behavior
+
+## Metric timing rules
+`scenario_runs_total` must preserve current labels:
+- `type`
+- `status`
+
+Current status values:
+- `started`
+- `completed`
+- `error`
+
+Metric timing must remain explicit:
+- emit `started` immediately before scenario business logic begins
+- emit `completed` only after scenario logic succeeds
+- emit `error` only when scenario logic fails
+
+Do not place all increments in one location.
+Do not skip metric emission because of Prisma failure.
+
+## Required behavior when adding a new scenario
+When adding a new scenario:
+1. Add it to ScenarioType enum
+2. Implement logic inside `runScenario`
+3. Preserve scenario flow ordering
+4. Ensure logging:
+   - `logStarted(...)` before business execution
+   - `logCompleted(...)` on success
+   - `logFailed(...)` on failure
+5. Ensure metrics:
+   - `scenarioCounter.inc({ type, status: 'started' })`
+   - `scenarioCounter.inc({ type, status: 'completed' })` on success
+   - `scenarioCounter.inc({ type, status: 'error' })` on failure
+6. Ensure behavior remains observable even if DB is unavailable
+
+## Logging rules
+- Always log scenario start
+- Always log scenario completion or failure
+- Logs must remain structured and machine-readable
+- Preserve existing structured JSON logging style
+- Preferred log fields include:
+  - `event`
+  - `scenario`
+  - `status` when relevant
+  - `message` when relevant
+  - `durationMs` when relevant
+  - `error` when relevant
+- Do not remove logging without equivalent replacement
+
+## Error handling rules
+- Scenario execution must not fully depend on Prisma
+- Prisma create/update in POST `/scenarios` should be treated as non-critical persistence
+- Prisma create/update in POST flow must be wrapped in try/catch where needed to preserve observability
+- Scenario metrics must still be emitted even if DB writes fail
+- Throw errors for scenario logic failures, not merely for storage write failures in POST flow
+- GET `/scenarios` is storage-dependent and may return `ServiceUnavailableException` if DB is unavailable
+- DB errors on GET `/scenarios` must still be logged before returning 503
+
+## API behavior
+- POST `/scenarios`:
+  - may still return success when scenario logic succeeds even if DB persistence failed
+  - must still emit metrics and logs even when DB is unavailable
+- GET `/scenarios`:
+  - may return 503 if DB is unavailable
+  - should not silently swallow storage errors
+
+## Code style
+- Prefer small changes over large refactors
+- Do not move logic outside `ScenarioService` unless clearly necessary
+- Keep flow readable and explicit
+- Avoid hidden side effects
+- Prefer additive changes over destructive changes
+
+## Required checks
+Before finishing a backend scenario change:
+- Does the scenario still emit `started` before business logic?
+- Does it emit `completed` on success?
+- Does it emit `error` on failure?
+- Does it still log correctly?
+- Does it still work when DB persistence fails?
+- Are GET storage errors logged before 503?
+- Are existing scenarios unaffected?
+- Are enum values, metrics, and logs still consistent?
+
+## Output style
+- minimal changes
+- no destructive refactors
+- explain reasoning
+- preserve working behavior

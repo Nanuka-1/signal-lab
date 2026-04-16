@@ -1,5 +1,4 @@
-import { Controller, Get, Header } from '@nestjs/common';
-import { register } from 'prom-client';
+import { Controller, Get } from '@nestjs/common';
 import { AppService } from './app.service';
 
 @Controller()
@@ -14,11 +13,5 @@ export class AppController {
   @Get('health')
   getHealth() {
     return { status: 'ok', service: 'signal-lab-api' };
-  }
-
-  @Get('metrics')
-  @Header('Content-Type', register.contentType)
-  getMetrics() {
-    return register.metrics();
   }
 }

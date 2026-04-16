@@ -5,10 +5,12 @@ import { ScenarioController } from './scenario/scenario.controller';
 import { ScenarioService } from './scenario/scenario.service';
 import { PrismaService } from './prisma/prisma.service';
 import { ScenarioPrismaRepository } from './scenario/scenario.prisma.repository';
+import { MetricsController } from './metrics/metrics.controller';
+
 
 @Module({
   imports: [],
-  controllers: [AppController, ScenarioController],
+  controllers: [AppController, ScenarioController, MetricsController],
   providers: [
     AppService,
     ScenarioService,
