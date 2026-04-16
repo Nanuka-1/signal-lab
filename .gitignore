@@ -1,0 +1,24 @@
+# Global ignores
+
+# node
+node_modules/
+**/node_modules/
+
+# Next.js
+.next/
+apps/web/.next/
+
+# build
+dist/
+build/
+apps/api/dist/
+
+# logs
+*.log
+
+# env
+.env
+.env.*
+
+# OS
+.DS_Store

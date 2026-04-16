@@ -56,3 +56,10 @@ pids
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
 /generated/prisma
+
+# Next.js (web app)
+apps/web/.next/
+apps/web/node_modules/
+
+# API build (если будет)
+apps/api/dist/
