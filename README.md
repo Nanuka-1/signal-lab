@@ -7,51 +7,44 @@ Signal Lab lets you trigger backend scenarios and immediately verify the full ob
 
 --------------------------------------------------
 
-What this demonstrates
-AreaWhat's builtEngineeringNestJS API + Next.js UI + PostgreSQL + full Docker Compose stackObservabilityPrometheus metrics · Loki logs via 
+What this demonstrates   AreaWhat's built
 
-Promtail · Grafana dashboardsAI architectureCursor AI layer: rules, skills, commands, hooks, marketplace, orchestratorContext 
+Engineering              NestJS API + Next.js UI + PostgreSQL + full Docker Compose stack
 
-economyOrchestrator skill that decomposes tasks atomically for smaller models
+Observability            Prometheus metrics · Loki logs via Promtail · Grafana dashboards
 
---------------------------------------------------
+AI architecture          Cursor AI layer: rules, skills, commands, hooks, marketplace, orchestrator  
 
-SERVICES
-
-UI:
-http://localhost:3005
-
-API:
-http://localhost:3000
-
-Prometheus:
-http://localhost:3001
-
-Grafana:
-http://localhost:3002
-
-Loki:
-http://localhost:3100
-
-NOTE:
-Loki does not have a UI.
-Opening http://localhost:3100 will return "404 page not found" — this is expected.
-Logs are viewed via Grafana.
+Contexteconomy           Orchestrator skill that decomposes tasks atomically for smaller models
 
 --------------------------------------------------
 
-15-MINUTE DEMO
+## Quick start
 
-STEP 1 — Run Scenario
+The project is designed for fast setup and reproducible verification of the full system.  
+All services  are started with a single command.
 
-Open UI:
-http://localhost:3005
+```bash
+git clone https://github.com/Nanuka-1/signal-lab
+cd signal-lab
+docker compose up -d
 
-Run scenario:
-system_error
+--------------------------------------------------
 
-Expected:
-Scenario executes successfully.
+## Services
+
+| Service | URL | Notes |
+|--------|-----|------|
+| UI | http://localhost:3005 | Run scenarios |
+| API | http://localhost:3000 | NestJS backend |
+| Metrics | http://localhost:3000/metrics | Raw Prometheus exposition |
+| Prometheus | http://localhost:3001 | Scrape targets and query |
+| Grafana | http://localhost:3002 | Dashboards and Loki explore |
+| Loki | http://localhost:3100 | Log storage (no UI, use Grafana) |
+
+> **Note:**  
+> Opening http://localhost:3100 will return `404 page not found` — this is expected.  
+> Loki does not provide a UI. Logs are accessed via Grafana → Explore.
 
 --------------------------------------------------
 
