@@ -166,35 +166,187 @@ Open a new Cursor chat and invoke the orchestrator skill.
 
 --------------------------------------------------
 
-ARCHITECTURE
+## Architecture
 
-Backend:
-NestJS
+```text
+UI (Next.js)
+├── apps/web/app/layout.tsx
+└── apps/web/app/page.tsx
+        │
+        ▼
+API (NestJS)
+├── apps/api/src/main.ts
+├── apps/api/src/app.module.ts
+├── apps/api/src/metrics/metrics.controller.ts
+├── apps/api/src/prisma/prisma.service.ts
+└── apps/api/src/scenario/
+    ├── scenario.controller.ts
+    ├── scenario.dto.ts
+    ├── scenario.prisma.repository.ts
+    ├── scenario.repository.ts
+    └── scenario.service.ts
+        │
+        ├── Prisma → PostgreSQL
+        ├── prom-client → /metrics
+        └── structured logs → Promtail → Loki
 
-Frontend:
-Next.js
+Infrastructure
+├── infra/prometheus/
+├── infra/grafana/
+├── infra/loki/
+└── infra/promtail/
 
-Database:
-PostgreSQL + Prisma
+Runtime flow
+The UI is implemented in apps/web/app/page.tsx
+The backend entry point is apps/api/src/main.ts
+Scenario handling is implemented in apps/api/src/scenario/
+Metrics are exposed through apps/api/src/metrics/metrics.controller.ts
+Database access is handled through Prisma in apps/api/src/prisma/prisma.service.ts
+Logs are collected from Docker containers by Promtail and stored in Loki
+Grafana reads both Prometheus and Loki through provisioned datasources
 
-Observability:
-Prometheus (metrics)
-Loki (logs via Promtail)
-Grafana (visualization)
-
-Infra:
-Docker Compose
+Scenario types
+Scenario	Behavior
+test_scenario	Immediate success with metrics and logs
+slow_success	Simulated delayed success
+system_error	Controlled error with metrics and error logs
 
 --------------------------------------------------
 
-STOP PROJECT
+## AI layer
 
+The `.cursor/` directory defines a controlled AI execution environment for Cursor.  
+It encodes project-specific rules, workflows, and safety constraints so that AI interactions remain predictable and aligned with the architecture.
+
+Unlike generic AI usage, Cursor in this project operates with explicit boundaries, reusable commands, and structured task decomposition.
+
+---
+
+### Skills
+
+| Skill | Purpose |
+|---|---|
+| `backend-scenario-skill.mdc` | Defines how scenarios should be implemented and extended within `scenario.service.ts` and related layers |
+| `observability-skill.mdc` | Enforces correct usage of metrics (`prom-client`), structured logging, and integration with Prometheus, Loki, and Grafana |
+| `orchestrator-skill.mdc` | Decomposes complex tasks into atomic steps and ensures execution stays scoped and safe |
+
+---
+
+### Commands
+
+| Command | Purpose |
+|---|---|
+| `backend-check.mdc` | Validates backend changes after modifying scenarios or services |
+| `observability-check.mdc` | Ensures metrics, logs, and observability flow are not broken |
+| `demo-flow.mdc` | Guides the execution of the full demo verification flow |
+
+---
+
+### Hooks
+
+| Hook | Purpose |
+|---|---|
+| `protect-observability.mdc` | Prevents accidental removal or modification of metrics and logging logic |
+| `guard-refactor-scope.mdc` | Restricts uncontrolled refactoring and enforces scoped changes |
+
+---
+
+### Rules
+
+| Rule | Purpose |
+|---|---|
+| `backend-observability-rules.mdc` | Defines constraints for metrics, logging, and backend structure |
+| `project-context.mdc` | Provides high-level project context for consistent AI behavior |
+
+---
+
+### Marketplace skills
+
+External capabilities are documented in:
+
+.cursor/marketplace-skills.md
+
+
+These extend Cursor with reusable tools such as navigation, diff analysis, and code understanding, adapted to this codebase.
+
+---
+
+### Orchestrator behavior
+
+The orchestrator skill acts as a task manager for AI execution:
+
+- breaks down tasks into small, atomic steps  
+- limits context to relevant files only  
+- enforces step-by-step execution  
+- prevents large uncontrolled changes  
+
+This enables smaller models to perform reliably within a constrained environment.
+--------------------------------------------------
+
+## Stack
+
+| Layer | Technology |
+|---|---|
+| Frontend | Next.js, Tailwind CSS |
+| Backend | NestJS (TypeScript) |
+| Database | PostgreSQL, Prisma |
+| Metrics | prom-client, Prometheus |
+| Logs | Structured JSON → Promtail → Loki |
+| Visualization | Grafana |
+| Infra | Docker Compose |
+
+
+## Stop
+
+```bash
 docker compose down
 
---------------------------------------------------
+docker compose down -v
 
-NOTES
 
-- All services start with a single command
-- No manual setup required
-- Designed to be verified in under 15 minutes
+
+---
+
+```md
+## Project structure
+
+```text
+signal-lab/
+├── apps/
+│   ├── api/
+│   │   ├── prisma/
+│   │   │   └── schema.prisma
+│   │   └── src/
+│   │       ├── metrics/
+│   │       │   └── metrics.controller.ts
+│   │       ├── prisma/
+│   │       │   └── prisma.service.ts
+│   │       └── scenario/
+│   │           ├── scenario.controller.ts
+│   │           ├── scenario.dto.ts
+│   │           ├── scenario.prisma.repository.ts
+│   │           ├── scenario.repository.ts
+│   │           └── scenario.service.ts
+│   │       ├── app.module.ts
+│   │       └── main.ts
+│   │
+│   └── web/
+│       └── app/
+│           ├── layout.tsx
+│           └── page.tsx
+│
+├── infra/
+│   ├── grafana/
+│   ├── loki/
+│   ├── prometheus/
+│   └── promtail/
+│
+├── .cursor/
+│   ├── commands/
+│   ├── hooks/
+│   ├── rules/
+│   ├── skills/
+│   └── marketplace-skills.md
+│
+├── docker-compose.yml
+└── README.md
