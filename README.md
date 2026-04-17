@@ -7,15 +7,12 @@ Signal Lab lets you trigger backend scenarios and immediately verify the full ob
 
 --------------------------------------------------
 
-QUICK START
+What this demonstrates
+AreaWhat's builtEngineeringNestJS API + Next.js UI + PostgreSQL + full Docker Compose stackObservabilityPrometheus metrics · Loki logs via 
 
-Run in terminal:
+Promtail · Grafana dashboardsAI architectureCursor AI layer: rules, skills, commands, hooks, marketplace, orchestratorContext 
 
-git clone https://github.com/Nanuka-1/signal-lab
-cd signal-lab
-docker compose up -d
-
-Wait 10–20 seconds for all services to start.
+economyOrchestrator skill that decomposes tasks atomically for smaller models
 
 --------------------------------------------------
 
