@@ -1,14 +1,9 @@
-# Signal Lab
+Signal Lab
 
-Signal Lab is an observability playground and AI-layer demo for the AI Engineer test task.
+Observability playground with a fully structured AI layer for Cursor.
+Built as a test task for AI Engineer position.
 
-It allows an interviewer to run backend scenarios and quickly verify:
-- metrics (Prometheus + direct API metrics)
-- logs (Loki via Grafana)
-- dashboards (Grafana)
-- AI workflow structure (.cursor)
-
-The project is designed to be reproducible with a single command.
+Signal Lab lets you trigger backend scenarios and immediately verify the full observability chain — metrics in Prometheus, logs in Loki, and dashboards in Grafana — with a single docker compose up -d.
 
 --------------------------------------------------
 
