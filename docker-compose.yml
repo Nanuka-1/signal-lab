@@ -4,12 +4,25 @@ services:
   api:
     build:
       context: ./apps/api
+    command: node dist/src/main
     ports:
       - "3000:3000"
     environment:
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/signal_lab
     depends_on:
       - postgres
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+  web:
+    build:
+      context: ./apps/web
+    ports:
+      - "3005:3005"
+    depends_on:
+      - api
 
   postgres:
     image: postgres:15
@@ -41,13 +54,12 @@ services:
       - ./infra/loki/config.yml:/etc/loki/config.yml
     command: -config.file=/etc/loki/config.yml
 
-
   promtail:
     image: grafana/promtail:2.9.0
     container_name: signal-lab-promtail
     volumes:
       - ./infra/promtail/config.yml:/etc/promtail/config.yml
-      - /var/log:/var/log
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
     command: -config.file=/etc/promtail/config.yml
     depends_on:
       - loki
