@@ -1,0 +1,188 @@
+# Signal Lab
+
+Signal Lab is an observability playground and AI-layer demo for the AI Engineer test task.
+
+It allows an interviewer to run backend scenarios and quickly verify:
+- metrics (Prometheus + direct API metrics)
+- logs (Loki via Grafana)
+- dashboards (Grafana)
+- AI workflow structure (.cursor)
+
+The project is designed to be reproducible with a single command.
+
+--------------------------------------------------
+
+QUICK START
+
+Run in terminal:
+
+git clone https://github.com/Nanuka-1/signal-lab
+cd signal-lab
+docker compose up -d
+
+Wait 10–20 seconds for all services to start.
+
+--------------------------------------------------
+
+SERVICES
+
+UI:
+http://localhost:3005
+
+API:
+http://localhost:3000
+
+Prometheus:
+http://localhost:3001
+
+Grafana:
+http://localhost:3002
+
+Loki:
+http://localhost:3100
+
+NOTE:
+Loki does not have a UI.
+Opening http://localhost:3100 will return "404 page not found" — this is expected.
+Logs are viewed via Grafana.
+
+--------------------------------------------------
+
+15-MINUTE DEMO
+
+STEP 1 — Run Scenario
+
+Open UI:
+http://localhost:3005
+
+Run scenario:
+system_error
+
+Expected:
+Scenario executes successfully.
+
+--------------------------------------------------
+
+STEP 2 — Check Metrics
+
+Option A — Direct API metrics
+
+Open:
+http://localhost:3000/metrics
+
+Expected:
+Raw metrics are visible (text output with counters and system metrics)
+
+---
+
+Option B — Prometheus (recommended)
+
+Open:
+http://localhost:3001/targets
+
+Expected:
+signal-lab-api → UP
+
+---
+
+Open:
+http://localhost:3001/graph
+
+Type query:
+up
+
+Click Execute
+
+Expected:
+Result value = 1
+
+--------------------------------------------------
+
+STEP 3 — Check Logs (Loki)
+
+Open Grafana:
+http://localhost:3002
+
+Go to:
+Explore
+
+Select data source:
+Loki
+
+Click:
+Run query
+
+Expected:
+- logs are visible
+- log lines appear with timestamps
+- new logs appear after running scenario
+
+Logs are collected from Docker containers via Promtail and stored in Loki.
+
+--------------------------------------------------
+
+STEP 4 — Check Dashboard
+
+In Grafana:
+Open Dashboards
+
+Expected:
+signal-lab-overview dashboard is available
+
+--------------------------------------------------
+
+STEP 5 — Check AI Layer
+
+Open folder:
+.cursor/
+
+Expected structure:
+rules/
+skills/
+commands/
+hooks/
+marketplace-skills.md
+
+--------------------------------------------------
+
+STEP 6 — Orchestrator
+
+The project includes an orchestrator skill that:
+- splits tasks into small steps
+- reduces context usage
+- enables predictable AI workflows
+
+--------------------------------------------------
+
+ARCHITECTURE
+
+Backend:
+NestJS
+
+Frontend:
+Next.js
+
+Database:
+PostgreSQL + Prisma
+
+Observability:
+Prometheus (metrics)
+Loki (logs via Promtail)
+Grafana (visualization)
+
+Infra:
+Docker Compose
+
+--------------------------------------------------
+
+STOP PROJECT
+
+docker compose down
+
+--------------------------------------------------
+
+NOTES
+
+- All services start with a single command
+- No manual setup required
+- Designed to be verified in under 15 minutes
