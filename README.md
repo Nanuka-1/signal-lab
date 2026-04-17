@@ -48,94 +48,121 @@ docker compose up -d
 
 --------------------------------------------------
 
-STEP 2 — Check Metrics
+## 15-minute verification
 
-Option A — Direct API metrics
+### Step 1 — Run a scenario
+
+Open:
+http://localhost:3005
+
+Select scenario:
+`system_error` → click **Run**
+
+**Expected:**
+- scenario executes successfully
+- API returns a response
+--------------------------------------------------
+
+### Step 2 — Verify metrics
+
+#### Option A — direct endpoint
 
 Open:
 http://localhost:3000/metrics
 
-Expected:
-Raw metrics are visible (text output with counters and system metrics)
+**Expected:**
+- raw text output is returned
+- `scenario_runs_total` counter is visible
 
 ---
 
-Option B — Prometheus (recommended)
+#### Option B — Prometheus (recommended)
 
 Open:
 http://localhost:3001/targets
 
-Expected:
-signal-lab-api → UP
+**Expected:**
+- `signal-lab-api` status is **UP**
 
 ---
 
 Open:
 http://localhost:3001/graph
 
-Type query:
-up
+Enter query:
 
-Click Execute
-
-Expected:
-Result value = 1
+```promql
+scenario_runs_total
 
 --------------------------------------------------
 
-STEP 3 — Check Logs (Loki)
+### Step 3 — Verify logs in Loki
 
-Open Grafana:
+Open:
+http://localhost:3002 (Grafana)
+
+Go to:
+**Explore**
+
+Select datasource:
+**Loki**
+
+Click:
+**Run query**
+
+**Expected:**
+- log lines appear with timestamps
+- structured JSON logs are visible
+- new logs appear after running a scenario
+- `system_error` scenario produces error-level log entries
+
+--------------------------------------------------
+
+### Step 4 — Verify dashboard
+
+Open:
 http://localhost:3002
 
 Go to:
-Explore
+**Dashboards**
 
-Select data source:
-Loki
+Open:
+`signal-lab-overview`
 
-Click:
-Run query
-
-Expected:
-- logs are visible
-- log lines appear with timestamps
-- new logs appear after running scenario
-
-Logs are collected from Docker containers via Promtail and stored in Loki.
+**Expected:**
+- `scenario_runs_total` metric is visible
+- chart reflects recent scenario executions
+- values increase after running scenarios
 
 --------------------------------------------------
 
-STEP 4 — Check Dashboard
+### Step 5 — Verify AI layer
 
-In Grafana:
-Open Dashboards
+Project contains:
 
-Expected:
-signal-lab-overview dashboard is available
-
---------------------------------------------------
-
-STEP 5 — Check AI Layer
-
-Open folder:
 .cursor/
+├── commands/
+│   ├── backend-check.mdc
+│   ├── demo-flow.mdc
+│   └── observability-check.mdc
+├── hooks/
+│   ├── guard-refactor-scope.mdc
+│   └── protect-observability.mdc
+├── rules/
+│   ├── backend-observability-rules.mdc
+│   └── project-context.mdc
+├── skills/
+│   ├── backend-scenario-skill.mdc
+│   ├── observability-skill.mdc
+│   └── orchestrator-skill.mdc
+└── marketplace-skills.md
 
-Expected structure:
-rules/
-skills/
-commands/
-hooks/
-marketplace-skills.md
+Open a new Cursor chat and invoke the orchestrator skill.
 
---------------------------------------------------
-
-STEP 6 — Orchestrator
-
-The project includes an orchestrator skill that:
-- splits tasks into small steps
-- reduces context usage
-- enables predictable AI workflows
+**Expected:**
+- tasks are decomposed into structured, atomic steps
+- execution is scoped to relevant files only
+- no uncontrolled or broad refactoring is performed
 
 --------------------------------------------------
 
